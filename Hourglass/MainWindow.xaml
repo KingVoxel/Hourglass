@@ -1,0 +1,154 @@
+<Window x:Class="Hourglass.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Hourglass"
+        Icon="Hourglass.ico"
+        Width="277" Height="382" MinWidth="140" MinHeight="240"
+        WindowStartupLocation="CenterScreen"
+        Background="#202020" Foreground="#F3F3F3"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="14">
+
+    <Window.TaskbarItemInfo>
+        <TaskbarItemInfo x:Name="Taskbar" />
+    </Window.TaskbarItemInfo>
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="Sand" Color="#E8B04A" />
+        <SolidColorBrush x:Key="Wood" Color="#8A5A2B" />
+
+        <!-- The two glass bulbs, drawn on a 200 x 300 canvas. The neck is at y = 150. -->
+        <PathGeometry x:Key="TopBulb"
+                      Figures="M 30,20 L 170,20 C 170,90 108,120 104,150 L 96,150 C 92,120 30,90 30,20 Z" />
+        <PathGeometry x:Key="BottomBulb"
+                      Figures="M 96,150 L 104,150 C 108,180 170,210 170,280 L 30,280 C 30,210 92,180 96,150 Z" />
+
+        <Style x:Key="RoundButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#F3F3F3" />
+            <Setter Property="Background" Value="#333333" />
+            <Setter Property="BorderBrush" Value="#454545" />
+            <Setter Property="Padding" Value="12,7" />
+            <Setter Property="MinWidth" Value="90" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" CornerRadius="6" BorderThickness="1"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource RoundButton}">
+            <Setter Property="Background" Value="{StaticResource Sand}" />
+            <Setter Property="BorderBrush" Value="{StaticResource Sand}" />
+            <Setter Property="Foreground" Value="#1A1A1A" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </Window.Resources>
+
+    <!-- Everything is laid out at a fixed 200-unit width, and the Viewbox scales it
+         to whatever size the window is. In compact mode the details panel is hidden
+         and the window is shortened by the same amount (see SetCompact in the code),
+         so the hourglass and countdown keep their size. -->
+    <Viewbox Stretch="Uniform" Margin="6">
+        <StackPanel x:Name="ContentPanel" Width="200">
+
+            <!-- Hourglass: click to switch between full and compact mode -->
+            <Border x:Name="HourglassArea" Background="Transparent" Cursor="Hand"
+                    MouseLeftButtonUp="HourglassArea_MouseLeftButtonUp"
+                    ToolTip="Click to switch between full and compact view">
+                <Viewbox Height="170" Stretch="Uniform">
+                    <Canvas Width="200" Height="300" RenderTransformOrigin="0.5,0.5">
+                        <Canvas.RenderTransform>
+                            <RotateTransform x:Name="Flip" Angle="0" />
+                        </Canvas.RenderTransform>
+
+                        <!-- Glass -->
+                        <Path Data="{StaticResource TopBulb}" Fill="#14FFFFFF" />
+                        <Path Data="{StaticResource BottomBulb}" Fill="#14FFFFFF" />
+
+                        <!-- Sand in the top bulb -->
+                        <Path Fill="{StaticResource Sand}">
+                            <Path.Data>
+                                <CombinedGeometry GeometryCombineMode="Intersect"
+                                                  Geometry1="{StaticResource TopBulb}">
+                                    <CombinedGeometry.Geometry2>
+                                        <RectangleGeometry x:Name="TopSandRect" Rect="30,20,140,130" />
+                                    </CombinedGeometry.Geometry2>
+                                </CombinedGeometry>
+                            </Path.Data>
+                        </Path>
+
+                        <!-- Sand in the bottom bulb -->
+                        <Path Fill="{StaticResource Sand}">
+                            <Path.Data>
+                                <CombinedGeometry GeometryCombineMode="Intersect"
+                                                  Geometry1="{StaticResource BottomBulb}">
+                                    <CombinedGeometry.Geometry2>
+                                        <RectangleGeometry x:Name="BottomSandRect" Rect="30,280,140,0" />
+                                    </CombinedGeometry.Geometry2>
+                                </CombinedGeometry>
+                            </Path.Data>
+                        </Path>
+
+                        <!-- Falling stream -->
+                        <Rectangle x:Name="SandStream" Canvas.Left="99" Canvas.Top="150" Width="2" Height="130"
+                                   Fill="{StaticResource Sand}" Visibility="Collapsed" />
+
+                        <!-- Glass outline -->
+                        <Path Data="{StaticResource TopBulb}" Stroke="#99FFFFFF" StrokeThickness="2" />
+                        <Path Data="{StaticResource BottomBulb}" Stroke="#99FFFFFF" StrokeThickness="2" />
+
+                        <!-- Frame -->
+                        <Rectangle Canvas.Left="18" Canvas.Top="8" Width="164" Height="12"
+                                   RadiusX="4" RadiusY="4" Fill="{StaticResource Wood}" />
+                        <Rectangle Canvas.Left="18" Canvas.Top="280" Width="164" Height="12"
+                                   RadiusX="4" RadiusY="4" Fill="{StaticResource Wood}" />
+                    </Canvas>
+                </Viewbox>
+            </Border>
+
+            <!-- Remaining time -->
+            <TextBlock x:Name="TimeText" Text="5:00"
+                       FontFamily="Segoe UI Variable Display, Segoe UI"
+                       FontSize="38" FontWeight="SemiBold" HorizontalAlignment="Center" />
+
+            <!-- Everything below the countdown: hidden in compact mode -->
+            <StackPanel x:Name="DetailsPanel">
+
+                <!-- Duration input -->
+                <TextBox x:Name="DurationBox" MaxLength="20" Margin="0,10,0,0"
+                         Background="#2B2B2B" Foreground="#F3F3F3" CaretBrush="#F3F3F3"
+                         BorderBrush="#454545" Padding="8,6" TextAlignment="Center"
+                         ToolTip="Examples: 5  ·  5m  ·  90s  ·  1h 30m  ·  2:30  ·  1:15:00" />
+                <TextBlock x:Name="HintText" Margin="0,6,0,0" FontSize="12" Opacity="0.65"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           Text="Try 5m, 90s, 1h 30m or 2:30" />
+
+                <!-- Buttons -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
+                    <Button x:Name="StartButton" Content="Start" IsDefault="True"
+                            Style="{StaticResource AccentButton}" Click="StartButton_Click" />
+                    <Button x:Name="ResetButton" Content="Reset" Margin="10,0,0,0"
+                            Style="{StaticResource RoundButton}" Click="ResetButton_Click" />
+                </StackPanel>
+
+                <CheckBox x:Name="TopmostCheck" Content="Always on top"
+                          Foreground="#F3F3F3" HorizontalAlignment="Center" Margin="0,12,0,0"
+                          Click="TopmostCheck_Click" />
+            </StackPanel>
+        </StackPanel>
+    </Viewbox>
+</Window>

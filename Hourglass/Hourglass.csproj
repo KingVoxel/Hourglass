@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RollForward>Major</RollForward>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Hourglass</RootNamespace>
+    <AssemblyName>Hourglass</AssemblyName>
+    <!-- Icon for the .exe (File Explorer, taskbar, Alt+Tab) -->
+    <ApplicationIcon>Hourglass.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same icon, embedded so the window can use it for its title bar -->
+    <Resource Include="Hourglass.ico" />
+  </ItemGroup>
+
+</Project>
